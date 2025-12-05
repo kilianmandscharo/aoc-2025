@@ -1,15 +1,13 @@
-with open("./03.test.txt", "r") as f:
+with open("./03.txt", "r") as f:
     lines = f.readlines()
 
 
-def get_max_num_idx(nums, picked, start):
+def get_max_num_idx(nums, start, end):
     max_num = -1
     max_num_idx = -1
 
-    for i in range(start, len(nums)):
-        if picked[i]:
-            continue
-        if nums[i] >= max_num:
+    for i in range(start, end):
+        if nums[i] > max_num:
             max_num = nums[i]
             max_num_idx = i
 
@@ -22,25 +20,16 @@ def get_count(width):
         nums = [int(val) for val in line.strip()]
         picked = [False for _ in nums]
 
-        print(line.strip())
-
         start = 0
+        end = len(nums) - width + 1
 
         for _ in range(0, width):
-            idx = get_max_num_idx(nums, picked, start)
-            print(f"{idx} ({nums[idx]}), start: {start}")
+            idx = get_max_num_idx(nums, start, end)
             picked[idx] = True
-            if len(nums) - idx >= width and nums[idx] > nums[start]:
-                start = idx + 1
+            start = idx + 1
+            end += 1
 
-        num = ""
-        for i, p in enumerate(picked):
-            if p:
-                num += str(nums[i])
-
-        print(num)
-        print()
-        count += int(num)
+        count += int("".join([str(x) for i, x in enumerate(nums) if picked[i]]))
     return count
 
 
@@ -53,6 +42,4 @@ def b():
 
 
 print("a:", a())
-
-# this answer is not correct yet
 print("b:", b())
