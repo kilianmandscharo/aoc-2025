@@ -14,27 +14,26 @@ size = len(boxes)
 
 m = [[0] * size for _ in range(size)]
 
+distances = []
+
+for i in range(0, size - 1):
+    for j in range(i + 1, size):
+        if i == j:
+            continue
+        box_a = boxes[i]
+        box_b = boxes[j]
+        dis = sqrt(
+            (box_a[0] - box_b[0]) ** 2
+            + (box_a[1] - box_b[1]) ** 2
+            + (box_a[2] - box_b[2]) ** 2
+        )
+        distances.append((dis, i, j))
+
+distances.sort(key=lambda d: d[0], reverse=True)
+
 
 def connect_closest():
-    smallest_dis = float("inf")
-    closest = (-1, -1)
-
-    for i in range(size):
-        for j in range(size):
-            if i == j or m[i][j] == 1:
-                continue
-            box_a = boxes[i]
-            box_b = boxes[j]
-            dis = sqrt(
-                (box_a[0] - box_b[0]) ** 2
-                + (box_a[1] - box_b[1]) ** 2
-                + (box_a[2] - box_b[2]) ** 2
-            )
-            if dis < smallest_dis:
-                smallest_dis = dis
-                closest = (i, j)
-
-    i, j = closest
+    _, i, j = distances.pop()
     m[i][j] = 1
     m[j][i] = 1
     return i, j
