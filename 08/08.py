@@ -47,7 +47,6 @@ for _ in range(iterations):
 def get_count(m, id, seen):
     q = [id]
     count = 0
-    circuits = [id]
     while len(q) > 0:
         i = q.pop()
         for j in range(len(m[i])):
@@ -57,7 +56,6 @@ def get_count(m, id, seen):
                 q.append(j)
                 seen.add(j)
                 count += 1
-                circuits.append(j)
     return count
 
 
