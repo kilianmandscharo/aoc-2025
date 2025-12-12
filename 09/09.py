@@ -23,7 +23,9 @@ width = 14
 height = 9
 
 
-def is_point_in_polygon(p, vertices, points, min_x):
+def is_point_in_polygon(p, vertices, points, min_x, cache):
+    if p in cache:
+        return cache[p]
     if p in vertices or p in points:
         return True
     x, y = p
@@ -40,16 +42,15 @@ def is_point_in_polygon(p, vertices, points, min_x):
         if (x, y) in points and vertex is None:
             count += 1
         x -= 1
-    return count % 2 != 0
+    ret = count % 2 != 0
+    cache[p] = ret
+    return ret
 
 
 def b():
     with open(file_name, "r") as f:
         data = [tuple(map(int, l.strip().split(","))) for l in f.readlines()]
-        min_x = min([p[0] for p in data])
-        max_x = max([p[0] for p in data])
-        min_y = min([p[1] for p in data])
-        max_y = max([p[1] for p in data])
+        points_min_x = min([p[0] for p in data])
 
     vertices = set(data)
     points = set()
@@ -71,13 +72,15 @@ def b():
 
     largest = -1
 
+    cache = dict()
+
     for i in range(len(data)):
         for j in range(i + 1, len(data)):
             (x1, y1), (x2, y2) = data[i], data[j]
             a, b = (x1, y2), (x2, y1)
-            if is_point_in_polygon(a, vertices, points, min_x) and is_point_in_polygon(
-                b, vertices, points, min_x
-            ):
+            if is_point_in_polygon(
+                a, vertices, points, points_min_x, cache
+            ) and is_point_in_polygon(b, vertices, points, points_min_x, cache):
                 area = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
                 largest = max(largest, area)
 
