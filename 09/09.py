@@ -3,13 +3,11 @@ from sys import argv
 is_test_mode = len(argv) > 1 and argv[1] == "test"
 file_name = "./09.test.txt" if is_test_mode else "./09.txt"
 
-with open(file_name, "r") as f:
-    points = [tuple(map(int, l.strip().split(","))) for l in f.readlines()]
-    sides = [(points[i], points[(i + 1) % len(points)]) for i in range(len(points))]
-    point_set = set(points)
-
 
 def a():
+    with open(file_name, "r") as f:
+        points = [tuple(map(int, l.strip().split(","))) for l in f.readlines()]
+
     largest = -1
 
     for i in range(len(points)):
@@ -21,90 +19,69 @@ def a():
     return largest
 
 
-v = "VERTICAL"
-h = "HORIZONTAL"
-
-
-def is_point_on_line(p, l):
-    min_x = min(l[0][0], l[1][0])
-    max_x = max(l[0][0], l[1][0])
-
-    min_y = min(l[0][1], l[1][1])
-    max_y = max(l[0][1], l[1][1])
-
-    x, y = p
-
-    return x >= min_x and x <= max_x and y >= min_y and y <= max_y
-
-
-def is_point_on_polygon(p):
-    for side in sides:
-        if is_point_on_line(p, side):
-            return True
-    return False
-
-
-def do_lines_intersect(a, b):
-    (a1, a2), (b1, b2) = a, b
-
-    # a_dir = v if a1[0] == a2[0] else h
-    # b_dir = v if b1[0] == b2[0] else h
-    #
-    # if a_dir == b_dir:
-    #     return False
-
-    a_min_y = min(a1[1], a2[1])
-    a_max_y = max(a1[1], a2[1])
-    b_min_y = min(b1[1], b2[1])
-    b_max_y = max(b1[1], b2[1])
-    do_not_overlap_y = a_min_y > b_max_y or a_max_y < b_min_y
-
-    a_min_x = min(a1[0], a2[0])
-    a_max_x = max(a1[0], a2[0])
-    b_min_x = min(b1[0], b2[0])
-    b_max_x = max(b1[0], b2[0])
-    do_not_overlap_x = a_min_x > b_max_x or a_max_x < b_min_x
-
-    return not do_not_overlap_y and not do_not_overlap_x
-
-
-def is_point_in_polygon(p):
-    count = 0
-    ray = ((0, p[1]), p)
-    print()
-    print(p)
-    for side in sides:
-        if do_lines_intersect(ray, side):
-            print(ray, side)
-            count += 1
-    return count % 2 != 0
-
-
 width = 14
 height = 9
 
 
-def print_grid():
-    grid = [["."] * width for _ in range(height)]
-    for x in range(width):
-        for y in range(height):
-            point = (x, y)
-            if is_point_on_polygon(point):
-                if point in point_set:
-                    grid[point[1]][point[0]] = "#"
-                else:
-                    grid[point[1]][point[0]] = "O"
-            elif is_point_in_polygon(point):
-                grid[point[1]][point[0]] = "i"
-    for l in grid:
-        print("".join(l))
-    print()
+def is_point_in_polygon(p, vertices, points, min_x):
+    if p in vertices or p in points:
+        return True
+    x, y = p
+    count = 0
+    vertex = None
+    while x >= min_x - 1:
+        if (x, y) in vertices:
+            vertex_dir = -1 if (x, y - 1) in points or (x, y - 1) in vertices else 1
+            if vertex is None:
+                vertex = vertex_dir
+            elif vertex != vertex_dir:
+                count += 1
+                vertex = None
+        if (x, y) in points and vertex is None:
+            count += 1
+        x -= 1
+    return count % 2 != 0
 
 
 def b():
-    print_grid()
+    with open(file_name, "r") as f:
+        data = [tuple(map(int, l.strip().split(","))) for l in f.readlines()]
+        min_x = min([p[0] for p in data])
+        max_x = max([p[0] for p in data])
+        min_y = min([p[1] for p in data])
+        max_y = max([p[1] for p in data])
 
-    return 0
+    vertices = set(data)
+    points = set()
+
+    for i in range(len(data)):
+        p1 = data[i]
+        p2 = data[(i + 1) % len(data)]
+        min_x = min(p1[0], p2[0])
+        max_x = max(p1[0], p2[0])
+        min_y = min(p1[1], p2[1])
+        max_y = max(p1[1], p2[1])
+        direction = "h" if min_y == max_y else "v"
+        if direction == "h":
+            for x in range(min_x + 1, max_x):
+                points.add((x, min_y))
+        else:
+            for y in range(min_y + 1, max_y):
+                points.add((min_x, y))
+
+    largest = -1
+
+    for i in range(len(data)):
+        for j in range(i + 1, len(data)):
+            (x1, y1), (x2, y2) = data[i], data[j]
+            a, b = (x1, y2), (x2, y1)
+            if is_point_in_polygon(a, vertices, points, min_x) and is_point_in_polygon(
+                b, vertices, points, min_x
+            ):
+                area = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
+                largest = max(largest, area)
+
+    return largest
 
 
 print("a:", a())
