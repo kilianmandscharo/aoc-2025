@@ -3,20 +3,21 @@ from sys import argv
 is_test_mode = len(argv) > 1 and argv[1] == "test"
 file_name = "./09.test.txt" if is_test_mode else "./09.txt"
 
+areas = []
+
 
 def a():
     with open(file_name, "r") as f:
         points = [tuple(map(int, l.strip().split(","))) for l in f.readlines()]
 
-    largest = -1
-
     for i in range(len(points)):
         for j in range(i + 1, len(points)):
             (x1, y1), (x2, y2) = points[i], points[j]
             area = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
-            largest = max(largest, area)
+            areas.append((area, points[i], points[j]))
 
-    return largest
+    areas.sort(reverse=True, key=lambda x: x[0])
+    return areas[0][0]
 
 
 def is_point_in_polygon(p, vertices, points, points_min_x, cache):
@@ -94,34 +95,23 @@ def b():
 
     cache = dict()
 
-    for i in range(len(data)):
-        for j in range(i + 1, len(data)):
-            print(i, j)
+    for i, (area, p1, p3) in enumerate(areas):
+        (x1, y1), (x2, y2) = p1, p3
 
-            p1, p3 = data[i], data[j]
-            (x1, y1), (x2, y2) = p1, p3
+        if x1 == x2 or y1 == y2:
+            continue
 
-            if x1 == x2 or y1 == y2:
-                continue
+        area = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
+        if area < largest:
+            continue
 
-            area = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
-            if area < largest:
-                continue
+        p2, p4 = (x1, y2), (x2, y1)
 
-            p2, p4 = (x1, y2), (x2, y1)
+        p2_inside = is_point_in_polygon(p2, vertices, points, points_min_x, cache)
+        p4_inside = is_point_in_polygon(p4, vertices, points, points_min_x, cache)
 
-            lines = [(p1, p2), (p2, p3), (p3, p4), (p4, p1)]
-
-            inside = True
-            for line in lines:
-                if not is_line_in_polygon(line, vertices, points, points_min_x, cache):
-                    inside = False
-                    break
-
-            if inside:
-                largest = max(largest, area)
-
-    return largest
+        if p2_inside and p4_inside:
+            return area
 
 
 print("a:", a())
