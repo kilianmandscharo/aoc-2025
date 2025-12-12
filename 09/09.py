@@ -19,7 +19,7 @@ def a():
     return largest
 
 
-def is_point_in_polygon(p, vertices, points, min_x, cache):
+def is_point_in_polygon(p, vertices, points, points_min_x, cache):
     if p in cache:
         return cache[p]
     if p in vertices or p in points:
@@ -27,7 +27,7 @@ def is_point_in_polygon(p, vertices, points, min_x, cache):
     x, y = p
     count = 0
     vertex = None
-    while x >= min_x - 1:
+    while x >= points_min_x - 1:
         if (x, y) in vertices:
             vertex_dir = -1 if (x, y - 1) in points or (x, y - 1) in vertices else 1
             if vertex is None:
@@ -41,6 +41,30 @@ def is_point_in_polygon(p, vertices, points, min_x, cache):
     ret = count % 2 != 0
     cache[p] = ret
     return ret
+
+
+def is_line_in_polygon(l, vertices, points, points_min_x, cache):
+    (x1, y1), (x2, y2) = l
+
+    min_x = min(x1, x2)
+    max_x = max(x1, x2)
+    min_y = min(y1, y2)
+    max_y = max(y1, y2)
+
+    if min_x == max_x:
+        for y in range(min_y, max_y):
+            if not is_point_in_polygon(
+                (min_x, y), vertices, points, points_min_x, cache
+            ):
+                return False
+    else:
+        for x in range(min_x, max_x):
+            if not is_point_in_polygon(
+                (x, min_y), vertices, points, points_min_x, cache
+            ):
+                return False
+
+    return True
 
 
 def b():
@@ -72,12 +96,29 @@ def b():
 
     for i in range(len(data)):
         for j in range(i + 1, len(data)):
-            (x1, y1), (x2, y2) = data[i], data[j]
-            a, b = (x1, y2), (x2, y1)
-            if is_point_in_polygon(
-                a, vertices, points, points_min_x, cache
-            ) and is_point_in_polygon(b, vertices, points, points_min_x, cache):
-                area = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
+            print(i, j)
+
+            p1, p3 = data[i], data[j]
+            (x1, y1), (x2, y2) = p1, p3
+
+            if x1 == x2 or y1 == y2:
+                continue
+
+            area = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
+            if area < largest:
+                continue
+
+            p2, p4 = (x1, y2), (x2, y1)
+
+            lines = [(p1, p2), (p2, p3), (p3, p4), (p4, p1)]
+
+            inside = True
+            for line in lines:
+                if not is_line_in_polygon(line, vertices, points, points_min_x, cache):
+                    inside = False
+                    break
+
+            if inside:
                 largest = max(largest, area)
 
     return largest
